@@ -2,6 +2,12 @@
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "final_eec"
+version = "0.0.dev0"
+authors = [
+    { name = "J. Tallman", email = "jttallman@ucdavis.edu" }
+]
 requires-python = ">=3.12"
 
 dependencies = [
@@ -11,3 +17,6 @@ dependencies = [
     "torchinfo",
     "datasets"
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
