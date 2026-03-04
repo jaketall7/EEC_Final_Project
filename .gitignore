@@ -1,0 +1,45 @@
+#Data
+data/
+
+build/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environment
+.venv/
+.venv1/
+.venv_o/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+
+# Cache
+.cache/
+.mypy_cache/
+.pytest_cache/
+
+# Idea
+.idea/
+
+# Generated dataset_creation
+*.zarr
+*.parquet
+
