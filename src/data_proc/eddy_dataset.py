@@ -100,11 +100,15 @@ class EddyPatchDataset(Dataset):
 
             img = arr[i]
 
+            # if isinstance(img, np.ma.MaskedArray):
+            #     img = img.filled(float(0))
+
             if isinstance(img, np.ma.MaskedArray):
-                img = img.filled(float(0))
+                img = img.filled(np.nan)
 
-
+            # clean nans
             img = np.asarray(img, dtype=np.float32)
+            img = np.nan_to_num(img, nan=0.0, posinf=0.0, neginf=0.0)
 
             img = torch.tensor(img, dtype=torch.float32)
             img = img.unsqueeze(0)  # (1, H, W)
