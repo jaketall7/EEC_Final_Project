@@ -3,6 +3,8 @@ import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from datasets import DatasetDict
+import data_proc.eddy_dataset as eddy_dataset
+
 #calcuated mean std
 
 mean_erosat = [0.31268863, 0.34511476, 0.37031967]
@@ -65,7 +67,7 @@ def preproc_and_normalize_hf_ds(ds, val, mean, std) :
 
     return ds, val
 
-def get_dataloaders(data = "tiny_imagenet"):
+def get_dataloaders(data = "tiny_imagenet", batch=64):
 
     if data == "tiny_imagenet":
         ds, ds_val = get_mini_imagnet()
@@ -79,16 +81,27 @@ def get_dataloaders(data = "tiny_imagenet"):
         ds, ds_val = get_uc_merced()
         ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_merced, std_merced)
 
+    elif data == "eddy":
+        channels = ("SST", "CHLA", "sealevel")
+        images_root = "../data/eddy_data/train_images_pkl"
+        labels_root = "../data/eddy_data/LABELS_TRAIN/train"
+
+        train_scene_ids, val_scene_ids = eddy_dataset.split_scene_ids(images_root, test_size=0.2, seed=42)
+
+        ds = eddy_dataset.EddyPatchDataset(images_root, labels_root, train_scene_ids,
+                                    channels=channels)  # , mean=mean, std=std)
+        ds_val = eddy_dataset.EddyPatchDataset(images_root, labels_root, val_scene_ids, channels=channels)  # , mean=mean, std=std)
+
 
     loader = DataLoader(
         ds,
-        batch_size=64,
+        batch_size=batch,
         shuffle=False
     )
 
     loader_val = DataLoader(
         ds_val,
-        batch_size=64,
+        batch_size=batch,
         shuffle=False
     )
 
