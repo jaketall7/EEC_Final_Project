@@ -50,10 +50,10 @@ def get_uc_merced():
     UC_Merced_train_val = make_train_val_split(UC_Merced)
     return UC_Merced_train_val["train"], UC_Merced_train_val["validation"]
 
-def preproc_and_normalize_hf_ds(ds, val, mean, std) :
+def preproc_and_normalize_hf_ds(ds, val, mean, std, size) :
     transform = transforms.Compose([
         transforms.Lambda(lambda im: im.convert("RGB")),  # force grey scales to rgb
-        transforms.Resize((224, 224)),
+        transforms.Resize((size, size)),
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std)  # normalize based on data
     ])
@@ -67,19 +67,19 @@ def preproc_and_normalize_hf_ds(ds, val, mean, std) :
 
     return ds, val
 
-def get_dataloaders(data = "tiny_imagenet", batch=64):
+def get_dataloaders(data = "tiny_imagenet", batch=64, size=224):
 
     if data == "tiny_imagenet":
         ds, ds_val = get_mini_imagnet()
-        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_tny_imgnet, std_tny_imgnet)
+        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_tny_imgnet, std_tny_imgnet, size)
 
     elif data == "eurosat_rgb":
         ds, ds_val = get_eurosat_rgb()
-        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_erosat, std_eurosat)
+        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_erosat, std_eurosat, size)
 
     elif data == "uc_merced":
         ds, ds_val = get_uc_merced()
-        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_merced, std_merced)
+        ds, ds_val = preproc_and_normalize_hf_ds(ds, ds_val, mean_merced, std_merced, size)
 
     elif data == "eddy":
         channels = ("SST", "CHLA", "sealevel")
@@ -89,8 +89,8 @@ def get_dataloaders(data = "tiny_imagenet", batch=64):
         train_scene_ids, val_scene_ids = eddy_dataset.split_scene_ids(images_root, test_size=0.2, seed=42)
 
         ds = eddy_dataset.EddyPatchDataset(images_root, labels_root, train_scene_ids,
-                                    channels=channels)  # , mean=mean, std=std)
-        ds_val = eddy_dataset.EddyPatchDataset(images_root, labels_root, val_scene_ids, channels=channels)  # , mean=mean, std=std)
+                                    channels=channels, patch=size)  # , mean=mean, std=std)
+        ds_val = eddy_dataset.EddyPatchDataset(images_root, labels_root, val_scene_ids, channels=channels,patch=size)  # , mean=mean, std=std)
 
 
     loader = DataLoader(
