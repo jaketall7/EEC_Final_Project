@@ -40,16 +40,30 @@ class FrozenDinoSimCLR(nn.Module):
         proj_hidden_dim: int = 2048,
         proj_out_dim: int = 128,
         freeze_backbone: bool = True,
+        input_proj = "1x1"
     ):
         super().__init__()
 
         # Trainable 1x1 conv to map 8 -> 3 channels
-        self.input_projector = nn.Conv2d(
-            in_channels=in_channels,
-            out_channels=3,
-            kernel_size=1,
-            bias=False,
-        )
+        if (input_proj == "1x1"):
+            self.input_projector = nn.Conv2d(
+                in_channels=in_channels,
+                out_channels=3,
+                kernel_size=1,
+                bias=False,
+            )
+
+        else :
+
+            self.input_projector = nn.Sequential(
+                nn.Conv2d(in_channels, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.GELU(),
+                nn.Conv2d(32, 32, kernel_size=3, padding=1),
+                nn.BatchNorm2d(32),
+                nn.GELU(),
+                nn.Conv2d(32, 3, kernel_size=1),
+            )
 
         self.backbone = dino_backbone
 
@@ -69,6 +83,10 @@ class FrozenDinoSimCLR(nn.Module):
         """
         """
         out = self.backbone(x)
+        
+        if out.ndim == 3:
+            return out[:, 0]
+        
         return out
 
     def forward(self, x: torch.Tensor):
@@ -76,10 +94,10 @@ class FrozenDinoSimCLR(nn.Module):
         x = self.input_projector(x)
 
         # Keep backbone frozen even if model.train() is called
-        with torch.no_grad():
-            feats = self.extract_backbone_features(x)
+        # with torch.no_grad():
+        #     feats = self.extract_backbone_features(x)
+        feats = self.extract_backbone_features(x)
 
-        # Projection head is trainable
         z = self.projection_head(feats)
         z = F.normalize(z, dim=1)
 
@@ -94,7 +112,7 @@ def get_simclr_transforms():
         transforms.RandomApply([transforms.ColorJitter(0.4, 0.4, 0.4, 0.1)], p=0.8),
         transforms.RandomGrayscale(p=0.2),
         transforms.GaussianBlur(kernel_size=3),
-        transforms.ToTensor()
+        # transforms.ToTensor()
     ])
 
     simclr_transforms_weak = transforms.Compose([
@@ -103,7 +121,7 @@ def get_simclr_transforms():
         transforms.RandomApply([transforms.ColorJitter(0.2, 0.2, 0.2, 0.05)], p=0.5),
         transforms.RandomGrayscale(p=0.1),
         transforms.GaussianBlur(kernel_size=1),
-        transforms.ToTensor()
+        # transforms.ToTensor()
     ])
 
     return simclr_transforms_weak
